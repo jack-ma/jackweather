@@ -30,7 +30,7 @@ public class Utility {
         return false;
     }
 
-    public synchronized static boolean handleCitiesResponse (JackWeatherDB jackWeatherDB, String response, int ProvinceId) {
+    public synchronized static boolean handleCitiesResponse (JackWeatherDB jackWeatherDB, String response, int provinceId) {
         if (!TextUtils.isEmpty(response)) {
             String[] allCities = response.split(",");
             if (allCities != null && allCities.length > 0) {
@@ -39,6 +39,7 @@ public class Utility {
                     City city = new City();
                     city.setCityCode(array[0]);
                     city.setCityName(array[1]);
+                    city.setProvinceId(provinceId);
                     jackWeatherDB.saveCity(city);
                 }
 
@@ -58,6 +59,7 @@ public class Utility {
                     County county = new County();
                     county.setCountyCode(array[0]);
                     county.setCountyName(array[1]);
+                    county.setCityId(cityId);
                     jackWeatherDB.saveCounty(county);
                 }
 
