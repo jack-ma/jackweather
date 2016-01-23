@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import io.github.jack_ma.jackweather.R;
+import io.github.jack_ma.jackweather.service.AutoUpdateService;
 import io.github.jack_ma.jackweather.util.HttpCallbackListener;
 import io.github.jack_ma.jackweather.util.HttpUtil;
 import io.github.jack_ma.jackweather.util.Utility;
@@ -138,5 +139,7 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
         currentDateText.setText(prefs.getString("current_date", ""));
         weatherInfoLayout.setVisibility(View.VISIBLE);
         cityNameText.setVisibility(View.VISIBLE);
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 }
