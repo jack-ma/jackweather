@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,6 +18,7 @@ import io.github.jack_ma.jackweather.model.City;
 import io.github.jack_ma.jackweather.model.County;
 import io.github.jack_ma.jackweather.model.JackWeatherDB;
 import io.github.jack_ma.jackweather.model.Province;
+import io.github.jack_ma.jackweather.model.WeatherInfo;
 
 /**
  * Created by trys on 16-1-20.
@@ -23,19 +26,23 @@ import io.github.jack_ma.jackweather.model.Province;
 public class Utility {
 
     public static void handleWeatherResponse(Context context, String response) {
-        try {
-            JSONObject jsonObject = new JSONObject(response);
-            JSONObject weatherInfo = jsonObject.getJSONObject("weatherinfo");
-            String cityName = weatherInfo.getString("city");
-            String weatherCode = weatherInfo.getString("cityid");
-            String temp1 = weatherInfo.getString("temp1");
-            String temp2 = weatherInfo.getString("temp2");
-            String weatherDesp = weatherInfo.getString("weather");
-            String publishTime = weatherInfo.getString("ptime");
-            saveWeatherInfo(context, cityName, weatherCode, temp1, temp2, weatherDesp,publishTime);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            JSONObject jsonObject = new JSONObject(response);
+//            JSONObject weatherInfo = jsonObject.getJSONObject("weatherinfo");
+//            String cityName = weatherInfo.getString("city");
+//            String weatherCode = weatherInfo.getString("cityid");
+//            String temp1 = weatherInfo.getString("temp1");
+//            String temp2 = weatherInfo.getString("temp2");
+//            String weatherDesp = weatherInfo.getString("weather");
+//            String publishTime = weatherInfo.getString("ptime");
+//            saveWeatherInfo(context, cityName, weatherCode, temp1, temp2, weatherDesp,publishTime);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+        Gson gson = new Gson();
+        // java.lang.reflect.Type type = new TypeToken<JsonBean>(){}.getType();
+        WeatherInfo jsonBean = gson.fromJson(response, WeatherInfo.class);
+        saveWeatherInfo(context, cityName, weatherCode, temp1, temp2, weatherDesp,publishTime);
     }
 
     public synchronized static boolean handleProvincesResponse (JackWeatherDB jackWeatherDB, String response) {

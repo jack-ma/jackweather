@@ -80,9 +80,9 @@ public class ChooseAreaActivity extends Activity {
                     selectedCity = cityList.get(index);
                     queryCounies();
                 } else if (currentLevel == LEVEL_COUNTY) {
-                    String countyCode = countyList.get(index).getCountyCode();
+                    String countyName = countyList.get(index).getCountyName();
                     Intent intent = new Intent(ChooseAreaActivity.this, WeatherActivity.class);
-                    intent.putExtra("county_code", countyCode);
+                    intent.putExtra("county_name", countyName);
                     startActivity(intent);
                     finish();
                 }

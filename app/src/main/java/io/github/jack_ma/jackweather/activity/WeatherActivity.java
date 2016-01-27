@@ -13,6 +13,9 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 import io.github.jack_ma.jackweather.R;
 import io.github.jack_ma.jackweather.service.AutoUpdateService;
 import io.github.jack_ma.jackweather.util.HttpCallbackListener;
@@ -48,11 +51,15 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
         currentDateText = (TextView) findViewById(R.id.current_date);
         switchCity = (Button) findViewById(R.id.switch_city);
         refreshWeather = (Button) findViewById(R.id.refresh_weather);
-        String countyCode = getIntent().getStringExtra("county_code");
-        if (!TextUtils.isEmpty(countyCode)) {
+        String countyName = getIntent().getStringExtra("county_name");
+        if (!TextUtils.isEmpty(countyName)) {
             publishText.setText("同步中...");
             weatherInfoLayout.setVisibility(View.INVISIBLE);
-            queryWeatherCode(countyCode);
+            try {
+                queryWeatherInfo(countyName);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         } else {
             showWeather();
         }
@@ -72,41 +79,29 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
             case R.id.refresh_weather:
                 publishText.setText("同步中...");
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                String weatherCode = prefs.getString("weather_code", "");
-                if (!TextUtils.isEmpty(weatherCode)) {
-                    queryWeatherInfo(weatherCode);
+                String countyName = prefs.getString("county_name", "");
+                if (!TextUtils.isEmpty(countyName)) {
+                    try {
+                        queryWeatherInfo(countyName);
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
                 }
                 break;
             default:
                 break;
         }
     }
-
-    private void queryWeatherCode (String countyCode) {
-        String address = "http://www.weather.com.cn/data/list3/city" +
-                countyCode + ".xml";
-        queryFromServer(address, "countyCode");
+ //   http://wthrcdn.etouch.cn/weather_mini?city=%E6%B5%B7%E6%B7%80
+    private void queryWeatherInfo (String countyName) throws UnsupportedEncodingException {
+        String address = "http://wthrcdn.etouch.cn/weather_mini?city=" + URLEncoder.encode(countyName, "utf8");
+        queryFromServer(address);
     }
 
-    private void queryWeatherInfo(String weatherCode) {
-        String address = "http://www.weather.com.cn/data/cityinfo/" +
-                weatherCode + ".html";
-        queryFromServer(address, "weatherCode");
-    }
-
-    private void queryFromServer(final String address, final String type) {
+    private void queryFromServer(final String address) {
         HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
             @Override
             public void onFinish(String response) {
-                if ("countyCode".equals(type)) {
-                    if (!TextUtils.isEmpty(response)) {
-                        String[] array = response.split("\\|");
-                        if (array != null && array.length == 2) {
-                            String weatherCode = array[1];
-                            queryWeatherInfo(weatherCode);
-                        }
-                    }
-                } else if ("weatherCode".equals(type)) {
                     Utility.handleWeatherResponse(WeatherActivity.this, response);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -114,7 +109,6 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
                             showWeather();
                         }
                     });
-                }
             }
 
             @Override
