@@ -1,11 +1,12 @@
 package io.github.jack_ma.jackweather.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by trys on 16-1-27.
  */
-public class Data {
+public class Data implements Serializable{
     public String getWendu() {
         return wendu;
     }

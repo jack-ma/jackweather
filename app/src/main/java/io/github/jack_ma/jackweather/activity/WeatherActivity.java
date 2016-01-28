@@ -1,6 +1,7 @@
 package io.github.jack_ma.jackweather.activity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,6 +18,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 import io.github.jack_ma.jackweather.R;
+import io.github.jack_ma.jackweather.model.WeatherInfo;
 import io.github.jack_ma.jackweather.service.AutoUpdateService;
 import io.github.jack_ma.jackweather.util.HttpCallbackListener;
 import io.github.jack_ma.jackweather.util.HttpUtil;
@@ -61,7 +63,7 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
                 e.printStackTrace();
             }
         } else {
-            showWeather();
+            showWeather(WeatherActivity.this);
         }
         switchCity.setOnClickListener(this);
         refreshWeather.setOnClickListener(this);
@@ -78,8 +80,9 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
                 break;
             case R.id.refresh_weather:
                 publishText.setText("同步中...");
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                String countyName = prefs.getString("county_name", "");
+                WeatherInfo weatherInfo = Utility.getWeatherInfo(WeatherActivity.this);
+//                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                String countyName = weatherInfo.getData().getCity();
                 if (!TextUtils.isEmpty(countyName)) {
                     try {
                         queryWeatherInfo(countyName);
@@ -106,7 +109,7 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showWeather();
+                            showWeather(WeatherActivity.this);
                         }
                     });
             }
@@ -123,14 +126,16 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
         });
     }
 
-    private void showWeather() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        cityNameText.setText(prefs.getString("city_name", ""));
-        temp1Text.setText(prefs.getString("temp1", ""));
-        temp2Text.setText(prefs.getString("temp2", ""));
-        weatherDespText.setText(prefs.getString("weather_desp", ""));
-        publishText.setText("今天" + prefs.getString("publish_time", "") + "发布");
-        currentDateText.setText(prefs.getString("current_date", ""));
+    private void showWeather(Context context) {
+        WeatherInfo weatherInfo = Utility.getWeatherInfo(context);
+//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        cityNameText.setText(weatherInfo.getData().getCity());
+        temp1Text.setText(weatherInfo.getData().getForecast().get(0).getLow());
+        temp2Text.setText(weatherInfo.getData().getForecast().get(0).getHigh());
+        weatherDespText.setText(weatherInfo.getData().getForecast().get(0).getType());
+        // TODO: 16-1-28 距离上次更新时间
+        publishText.setText("同步完成");
+        currentDateText.setText(weatherInfo.getData().getForecast().get(0).getDate());
         weatherInfoLayout.setVisibility(View.VISIBLE);
         cityNameText.setVisibility(View.VISIBLE);
         Intent intent = new Intent(this, AutoUpdateService.class);

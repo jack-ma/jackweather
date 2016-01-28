@@ -4,12 +4,18 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -41,8 +47,8 @@ public class Utility {
 //        }
         Gson gson = new Gson();
         // java.lang.reflect.Type type = new TypeToken<JsonBean>(){}.getType();
-        WeatherInfo jsonBean = gson.fromJson(response, WeatherInfo.class);
-        saveWeatherInfo(context, cityName, weatherCode, temp1, temp2, weatherDesp,publishTime);
+        WeatherInfo weatherInfo = gson.fromJson(response, WeatherInfo.class);
+        saveWeatherInfo(weatherInfo, context);
     }
 
     public synchronized static boolean handleProvincesResponse (JackWeatherDB jackWeatherDB, String response) {
@@ -104,18 +110,76 @@ public class Utility {
         return false;
     }
 
-    public static void saveWeatherInfo (Context context, String cityName, String weatherCode, String temp1,
-                                        String temp2, String weatherDesp, String publishTime) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年M月d日", Locale.CHINA);
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putBoolean("city_selected", true);
-        editor.putString("city_name", cityName);
-        editor.putString("weather_code", weatherCode);
-        editor.putString("temp1", temp1);
-        editor.putString("temp2", temp2);
-        editor.putString("weather_desp", weatherDesp);
-        editor.putString("publish_time", publishTime);
-        editor.putString("current_date", sdf.format(new Date()));
-        editor.commit();
+    /**
+     * 序列化对象
+     *
+     * @param weatherInfo
+     * @return
+     * @throws IOException
+     */
+    private static String serialize(WeatherInfo weatherInfo) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+                byteArrayOutputStream);
+        objectOutputStream.writeObject(weatherInfo);
+        String serStr = byteArrayOutputStream.toString("ISO-8859-1");
+        serStr = java.net.URLEncoder.encode(serStr, "UTF-8");
+        objectOutputStream.close();
+        byteArrayOutputStream.close();
+        Log.d("serial", "serialize str =" + serStr);
+        return serStr;
+    }
+
+    /**
+     * 反序列化对象
+     *
+     * @param str
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    public static WeatherInfo deSerialization(String str) throws IOException,
+            ClassNotFoundException {
+        String redStr = java.net.URLDecoder.decode(str, "UTF-8");
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(
+                redStr.getBytes("ISO-8859-1"));
+        ObjectInputStream objectInputStream = new ObjectInputStream(
+                byteArrayInputStream);
+        WeatherInfo weatherInfo = (WeatherInfo) objectInputStream.readObject();
+        objectInputStream.close();
+        byteArrayInputStream.close();
+        return weatherInfo;
+    }
+
+    public static void saveWeatherInfo (WeatherInfo weatherInfo, Context context) {
+        String strObject = new String();
+        try {
+            strObject = serialize(weatherInfo);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        SharedPreferences sp = context.getSharedPreferences("weather_info", 0);
+        SharedPreferences.Editor edit = sp.edit();
+        edit.putString("weather", strObject);
+        edit.commit();
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年M月d日", Locale.CHINA);
+//        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+//        editor.putBoolean("city_selected", true);
+//        editor.putString("current_date", sdf.format(new Date()));
+//        editor.commit();
+    }
+
+    public static WeatherInfo getWeatherInfo (Context context) {
+
+        SharedPreferences sp = context.getSharedPreferences("weather_info", 0);
+        try {
+            WeatherInfo weatherInfo = deSerialization(sp.getString("weather", null));
+            return  weatherInfo;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

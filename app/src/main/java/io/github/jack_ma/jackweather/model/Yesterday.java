@@ -1,9 +1,11 @@
 package io.github.jack_ma.jackweather.model;
 
+import java.io.Serializable;
+
 /**
  * Created by trys on 16-1-27.
  */
-public class Yesterday {
+public class Yesterday implements Serializable{
 
     public String getDate() {
         return date;

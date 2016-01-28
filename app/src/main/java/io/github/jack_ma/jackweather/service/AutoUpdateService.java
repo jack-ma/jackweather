@@ -10,6 +10,11 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
+import io.github.jack_ma.jackweather.activity.WeatherActivity;
+import io.github.jack_ma.jackweather.model.WeatherInfo;
 import io.github.jack_ma.jackweather.util.HttpCallbackListener;
 import io.github.jack_ma.jackweather.util.HttpUtil;
 import io.github.jack_ma.jackweather.util.Utility;
@@ -42,10 +47,16 @@ public class AutoUpdateService extends Service {
     }
 
     private void updateWeather() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String weatherCode = prefs.getString("weather_code", "");
-        String address = "http://www.weather.com.cn/data/cityinfo/" +
-                weatherCode + ".html";
+        WeatherInfo weatherInfo = Utility.getWeatherInfo(this);
+        String countyName = weatherInfo.getData().getCity();
+//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+//        String weatherCode = prefs.getString("weather_code", "");
+        String address = null;
+        try {
+            address = "http://wthrcdn.etouch.cn/weather_mini?city=" + URLEncoder.encode(countyName, "utf8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
             @Override
             public void onFinish(String response) {
